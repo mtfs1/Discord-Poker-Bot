@@ -2,6 +2,7 @@ import core.cardgame as cardgame
 # import cardgame as cardgame
 import pprint
 
+
 def equal(self, other):
     return (self.rank == other.rank)
 
@@ -27,7 +28,9 @@ setattr(cardgame.Card, '__ge__', greater_or_equal_to)
 setattr(cardgame.Card, '__lt__', lower_than)
 setattr(cardgame.Card, '__le__', lower_or_equal_to)
 
+
 class Poker_Player(cardgame.Player):
+    
     def __init__(self, name:str, money:int, channel):
         super().__init__(name, 0, money)
         self.channel = channel
@@ -42,9 +45,10 @@ class Poker_Player(cardgame.Player):
             self.all_in = True
         return amount_subtracted
 
-class Poker_Game:
-    def __init__(self, players:list):
 
+class Poker_Game:
+
+    def __init__(self, players:list):
         #table
         self.table = []
 

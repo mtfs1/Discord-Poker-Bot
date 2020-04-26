@@ -3,7 +3,8 @@ import core.poker as poker
 # import cardgame
 # import poker
 
-def greater_hand(table:list, *args:list):
+# def greater_hand(table:list, *args:list):
+def greater_hand(table:list, hands:list):
 
     list_of_points = []
 
@@ -17,10 +18,11 @@ def greater_hand(table:list, *args:list):
 
 
     def main():
-        for c in args:
+        for c in hands:
             actual_hand = table + c
             points = is_royal(actual_hand)
             list_of_points.append(points)
+        return list_of_points
 
 
     def is_royal(table_plus_hand):
@@ -471,41 +473,42 @@ def greater_hand(table:list, *args:list):
         print('High')
         print(points)
         return points
-    main()
+    return main()
 
-deck = cardgame.Deck()
-deck.shuffle()
+# deck = cardgame.Deck()
+# deck.shuffle()
 
-table = []
-table.append(deck.withdrawCard())
-table.append(deck.withdrawCard())
-table.append(deck.withdrawCard())
-table.append(deck.withdrawCard())
-table.append(deck.withdrawCard())
+# table = []
+# table.append(deck.withdraw_card())
+# table.append(deck.withdraw_card())
+# table.append(deck.withdraw_card())
+# table.append(deck.withdraw_card())
+# table.append(deck.withdraw_card())
 
-hand1 = []
-hand1.append(deck.withdrawCard())
-hand1.append(deck.withdrawCard())
+# hand1 = []
+# hand1.append(deck.withdraw_card())
+# hand1.append(deck.withdraw_card())
 
-hand2 = []
-hand2.append(deck.withdrawCard())
-hand2.append(deck.withdrawCard())
+# hand2 = []
+# hand2.append(deck.withdraw_card())
+# hand2.append(deck.withdraw_card())
 
-hand3 = []
-hand3.append(deck.withdrawCard())
-hand3.append(deck.withdrawCard())
+# hand3 = []
+# hand3.append(deck.withdraw_card())
+# hand3.append(deck.withdraw_card())
 
-print('-------')
-for card in table + hand1:
-    print(card)
-print('-------')
-for card in table + hand2:
-    print(card)
-print('-------')
-for card in table + hand3:
-    print(card)
-print('-------')
-greater_hand(table, hand1, hand2, hand3)
+# print('-------')
+# for card in table + hand1:
+#     print(card)
+# print('-------')
+# for card in table + hand2:
+#     print(card)
+# print('-------')
+# for card in table + hand3:
+#     print(card)
+# print('-------')
+# l = greater_hand(table, hand1, hand2, hand3)
+# print(l)
 
 # tableTest = []
 # tableTest.append(cardgame.Card(5, 'Spades'))
