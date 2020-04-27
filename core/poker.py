@@ -101,7 +101,9 @@ class Poker_Game:
         else:
             raise Exception("You cannot pass untill bet {}".format(self.actual_bet))
 
-    def fold(self):
+    def fold(self, deck:cardgame.Deck):
+        for c in self.players_in_game[self.turn].hand:
+            deck.put_card(c)
         del self.players_in_game[self.turn]
         if self.turn >= len(self.players_in_game):
             self.turn = len(self.players_in_game) - 1
@@ -147,14 +149,17 @@ class Poker_Game:
             raise Exception("Illegal move")
         self.pass_turn()
     
-    def start_game(self):
+    def start_game(self, deck:cardgame.Deck):
         self.actual_bet = 0
         self.turn = 0
-        self.pot = 0
+        self.pot = [0]
         self.round = 0
         self.players_in_game = []
-        for p in self.players:
-            self.players_in_game.append(p)
+
+        for __ in self.players:
+            player = self.players[__]
+            self.players_in_game.append(player)
+            player.actual_bet = 0
 
         if self.big_blind + 1 == len(self.players):
             self.big_blind = 0
@@ -165,6 +170,11 @@ class Poker_Game:
             self.small_blind = 0
         else:
             self.small_blind +=1
+
+        for card in self.table:
+            deck.put_card(card)
+
+        self.table = []
 
     def get_prise(self, list_of_players):
         list_of_winners = list_of_players

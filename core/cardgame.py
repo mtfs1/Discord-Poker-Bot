@@ -6,7 +6,7 @@ There are three main classes, representing the objects
 of cards, decks and players
 
 The module doesn't implement any kind of game rules, so
-it can be used in a diversity of diferent rogrammes that
+it can be used in a diversity of diferent programmes that
 implement diferent types of deck games
 '''
 
@@ -32,7 +32,6 @@ class Card:
 
     # An prettier form of debugging the card object by print()
     def __str__(self):
-        rank = self.rank
         if self.rank == 1:
             rank = 'A'
         elif self.rank == 11:
@@ -43,21 +42,28 @@ class Card:
             rank = 'K'
         elif self.rank == 14:
             rank = 'A'
-        return '{} of {}'.format(rank, self.suit)
+        return f'{self.rank} of {self.suit}'
 
     # returns the name of the card
     def return_card(self):
-        if self.rank in (11, 12, 13, 14, 15):
+        if self.rank in (11, 12, 13, 14):
             rank_to_letter = {11: 'Jack', 12: 'Queen', 13: 'King', 14: 'Ace'}
-            return '{} of {}'.format(rank_to_letter[self.rank], self.suit)
-        return '{} of {}'.format(self.rank, self.suit)
+            return f'{rank_to_letter[self.rank]} of {self.suit}'
+        return f'{self.rank} of {self.suit}'
+
+    # returns the rank simbol of the card, either a number or a letter
+    def return_rank_simbol(self):
+        if self.rank in (11, 12, 13, 14):
+            rank_to_letter = {11: 'J', 12: 'Q', 13: 'K', 14: 'A'}
+            return rank_to_letter[self.rank]
+        return self.rank
 
     # prints the name of the card
     def show_card(self):
-        if self.rank in (11, 12, 13, 14, 15):
+        if self.rank in (11, 12, 13, 14):
             rank_to_letter = {11: 'Jack', 12: 'Queen', 13: 'King', 14: 'Ace'}
-            return '{} of {}'.format(rank_to_letter[self.rank], self.suit)
-        print('{} of {}'.format(self.rank, self.suit))
+            return f'{rank_to_letter[self.rank]} of {self.suit}'
+        print(f'{self.rank} of {self.suit}')
 
 # 
 # A class representing a default deck, with 52 cards
