@@ -10,10 +10,7 @@ async def play_game(
         ctx:commands.context, client:commands.Bot,
         list_of_users:dict, is_first_table:bool = True):
     async def flow():
-        if is_first_table:
-            create_game()
-        else:
-            game.start_game(deck)
+        create_game() if is_first_table else game.start_game(deck)
         await bet_round(3)
         await bet_round(1)
         await bet_round(1)
@@ -43,11 +40,8 @@ async def play_game(
 
         def get_list_of_players():
             global list_of_players
-            list_of_players = []
-
-            for u in list_of_users:
-                p1 = poker.Poker_Player(u, 2000, list_of_users[u])
-                list_of_players.append(p1)
+            list_of_players = [poker.Poker_Player(user, 2000, channel) 
+                               for user, channel in list_of_users.items()]
 
         def get_game():
             global game
@@ -65,30 +59,25 @@ async def play_game(
                 return False
 
             async def raise_bet(need_to_bet):
-                p = game.turn
-                player = game.players[game.players_in_game[p]]
+                __ = game.turn
+                player = game.players[game.players_in_game[__]]
 
                 message = "How much do you want to raise?"
                 name = player.name
+                is_int = lambda s: s.isdigit()
+                raise_value = int(await wait_for_response(message, name, is_int))
 
-                def is_number(s):
-                    try:
-                        float(s)
-                        return True
-                    except ValueError:
-                        return False
-                
-                raise_value = float(await wait_for_response(message, name, is_number))
                 game.bet(need_to_bet + raise_value)
-                game.last_to_raise = p
+                game.last_to_raise = game.players_in_game[__]
                 
                 return False
 
             async def pass_turn(need_to_bet):
-                if game.turn == game.last_to_raise:
+                if game.players_in_game[game.turn] == game.last_to_raise:
                     game.pass_without_betting()
                     return True
                 game.pass_without_betting()
+                return False
 
             async def fold(need_to_bet):
                 game.fold(deck)
@@ -120,8 +109,7 @@ async def play_game(
                 game.bet(game.actual_blind, game.big_blind)
                 deck.shuffle()
 
-                for p in game.players:
-                    player = game.players[p]
+                for player in game.players.values():
                     player.withdraw_card(deck)
                     player.withdraw_card(deck)
 
@@ -140,9 +128,10 @@ async def play_game(
                         await msg.add_reaction(reactions[card.suit.lower()])
                        
             game.last_to_raise = game.big_blind
-            game.flag = False
+
 
         async def bets():
+            game.flag = True if len(game.players_in_game) == 1 else False
             while not game.flag:
                 __ = game.turn
                 player = game.players[__]
@@ -152,72 +141,73 @@ async def play_game(
                         message = (f"{player.name} needs to bet {need_to_bet}\n"
                                    "Do you want to call, raise or fold?\n"
                                    "[c] call\n[r] raise\n[f] fold")
-                        name = player.name
-                        
-                        def is_valid(s):
-                            return s.lower() in ["c", "r", "f"]
-
+                        name = player.name                        
+                        is_valid = lambda s: s.lower() in ["c", "r", "f"]
                         response = await wait_for_response(message, name, is_valid)
+
                         await options[response.lower()](need_to_bet)
                     else:
                         message = (f"{player.name} don't need to bet\n"
                                    "Do you want to pass, raise or fold?\n"
                                    "[p] pass\n[r] raise\n[f] fold")
                         name = player.name
-
-                        def is_valid(s):
-                            return s.lower() in ["p", "r", "f"]
-
+                        is_valid = lambda s: s.lower() in ["p", "r", "f"]
                         response = await wait_for_response(message, name, is_valid)
+
                         value = await options[response.lower()](need_to_bet)
-                        if value:
-                            game.flag = True                
+                        game.flag = value
             await ctx.send(separator)
 
         async def show_table():
+            flag = True if (len(game.players_in_game) > 1) or (cards_to_table == 0) else False
+            
             for __ in range(cards_to_table):
                 game.withdraw_to_table(deck)
 
-            for card in game.table:
-                reactions = {
-                    "spades":"♠️",
-                    "clubs":"♣️",
-                    "hearts":"♥️",
-                    "diamonds":"♦️"
-                }
+            if flag:
+                for card in game.table:
+                    reactions = {
+                        "spades":"♠️",
+                        "clubs":"♣️",
+                        "hearts":"♥️",
+                        "diamonds":"♦️"
+                    }
 
-                msg = await ctx.send(f"==={card.return_rank_simbol()}===")
-                await msg.add_reaction(reactions[card.suit.lower()])
+                    msg = await ctx.send(f"==={card.return_rank_simbol()}===")
+                    await msg.add_reaction(reactions[card.suit.lower()])
 
-            await ctx.send(separator)
+                await ctx.send(separator)
 
         await bet_round_main_flow()
 
     async def hand_parser():
         table = game.table
         hands = [] 
-        for p in game.players:
+        for p in game.players_in_game:
             hands.append(game.players[p].hand)
 
         points = hand_parser_module.greater_hand(table, hands)
         points_sorted = sorted(points, reverse=True)
 
         global list_of_winners
-        list_of_winners = []
-
-        for score in points_sorted:
-            list_of_winners.append(points.index(score))
+        list_of_winners = [points.index(score) for score in points_sorted]
 
         winner_points = max(points)
         winner_index = points.index(winner_points)
-        await ctx.send(f"{game.players[winner_index].name} won the round!")
+        await ctx.send(f"{game.players[game.players_in_game[winner_index]].name} won the round!")
 
     async def chip_redistribution_from_pot():
-        ...
-        # for player in list_of_winners:
-        #     if not player.all_in:
-        #         for pot in game.pot:
-        #             player.chips += pot
-        #         break
+        for player_index in list_of_winners:
+            player = game.players[game.players_in_game[player_index]]
+            if not player.all_in:
+                for i, pot in enumerate(game.pot):
+                    player.money += pot[0]
+                    game.pot[i][0] = 0
+                break
+            else:
+                for i, pot in enumerate(game.pot):
+                    if player.id in pot[1]:
+                        player.money += pot[0]
+                        game.pot[i][0] = 0
 
     await flow()

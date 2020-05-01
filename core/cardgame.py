@@ -42,7 +42,7 @@ class Card:
             rank = 'K'
         elif self.rank == 14:
             rank = 'A'
-        return f'{self.rank} of {self.suit}'
+        return f'{rank} of {self.suit}'
 
     # returns the name of the card
     def return_card(self):
@@ -74,6 +74,10 @@ class Deck:
         for t in SUITS:
             for v in RANKS:
                 self.cards.append(Card(v, t))
+
+    def __iadd__(self, other:list):
+        self.cards += other
+        return self
     
     # returns the card in the top of the deck
     def withdraw_card(self):

@@ -58,7 +58,7 @@ class Poker_Game:
         self.actual_blind = 100
 
         # pot system
-        self.pot = [0]
+        self.pot = [[0, []]]
         self.actual_pot = 0
 
         # time system
@@ -102,12 +102,11 @@ class Poker_Game:
             raise Exception("You cannot pass untill bet {}".format(self.actual_bet))
 
     def fold(self, deck:cardgame.Deck):
-        for c in self.players_in_game[self.turn].hand:
-            deck.put_card(c)
+        deck += self.players[self.players_in_game[self.turn]].hand
+        deck.shuffle()
         del self.players_in_game[self.turn]
         if self.turn >= len(self.players_in_game):
             self.turn = len(self.players_in_game) - 1
-        self.pass_turn()
 
     def bet(self, amount:int, index = None):
         if index != None:
@@ -117,28 +116,27 @@ class Poker_Game:
 
         if (player.actual_bet + amount > self.actual_bet) and (player.money > amount):
             amount_subtracted = player.bet(amount)
-            self.pot[self.actual_pot] += amount_subtracted
+            self.pot[self.actual_pot][0] += amount_subtracted
+            if player.id not in self.pot[self.actual_pot][1]:
+                self.pot[self.actual_pot][1].append(player.id)
             self.actual_bet = player.actual_bet
 
-        elif (player.actual_bet + amount == self.actual_bet) and (player.money > amount):
+        elif (player.actual_bet + amount == self.actual_bet) and (player.money >= amount):
             amount_subtracted = player.bet(amount)
-            self.pot[self.actual_pot] += amount_subtracted
+            self.pot[self.actual_pot][0] += amount_subtracted
+            if player.id not in self.pot[self.actual_pot][1]:
+                self.pot[self.actual_pot][1].append(player.id)
 
         elif (player.actual_bet + amount < self.actual_bet) and (player.money == amount):
             amount_subtracted = player.bet(amount)
             not_paid = self.actual_bet - amount_subtracted
-            turns_passed = range(self.turn - 1)
-            self.pot.append(0)
-            for t in turns_passed:
-                self.pot[self.actual_pot] -= not_paid
-                self.pot[self.actual_pot + 1] += not_paid
-            self.pot[self.actual_pot] += amount_subtracted
-            self.actual_pot += 1
-
-        elif (player.actual_bet + amount == self.actual_bet) and (player.money == amount):
-            amount_subtracted = player.bet(amount)
-            self.pot[self.actual_pot] += amount_subtracted
-            self.pot.append(0)
+            self.pot.append([0, []])
+            for __ in range(self.turn - 1):
+                self.pot[self.actual_pot][0] -= not_paid
+                self.pot[self.actual_pot + 1][0] += not_paid
+            self.pot[self.actual_pot][0] += amount_subtracted
+            if player.id not in self.pot[self.actual_pot][1]:
+                self.pot[self.actual_pot][1].append(player.id)
             self.actual_pot += 1
 
         else:
@@ -152,14 +150,15 @@ class Poker_Game:
     def start_game(self, deck:cardgame.Deck):
         self.actual_bet = 0
         self.turn = 0
-        self.pot = [0]
+        self.pot = [[0, []]]
         self.round = 0
         self.players_in_game = []
 
-        for __ in self.players:
-            player = self.players[__]
-            self.players_in_game.append(player)
+        for player in self.players.values():
+            self.players_in_game.append(player.id)
             player.actual_bet = 0
+            deck += player.hand
+            player.hand = []
 
         if self.big_blind + 1 == len(self.players):
             self.big_blind = 0
@@ -171,13 +170,6 @@ class Poker_Game:
         else:
             self.small_blind +=1
 
-        for card in self.table:
-            deck.put_card(card)
-
+        deck += self.table
         self.table = []
-
-    def get_prise(self, list_of_players):
-        list_of_winners = list_of_players
-        for i in range(len(list_of_winners)):
-            list_of_winners[i].money += self.pot[i]
-        self.pot = [0]
+        deck.shuffle()

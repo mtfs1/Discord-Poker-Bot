@@ -1,4 +1,4 @@
 credentials.py
-pokerbotenv
+env
 __pycache__
-core/pycache
+core/__pycache__
